@@ -13,6 +13,7 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import org.json.JSONObject
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -1742,7 +1743,7 @@ private fun parseSwipeKeyMap(json: String): Map<String, SwipeAction> {
         val idToAction = SwipeAction.entries.associateBy { it.id }
         obj.keys().asSequence().mapNotNull { key ->
             val actionId = obj.optString(key, "")
-            idToAction[actionId]?.let { action -> key to action }
+            idToAction[actionId]?.let { action: SwipeAction -> key to action }
         }.toMap()
     }.getOrDefault(emptyMap())
 }
@@ -1930,12 +1931,12 @@ private fun SwipePreviewSection(
     isDark: Boolean,
     lightColor: Int,
     darkColor: Int,
-    textSize: Int
+    swipeTextSize: Int
 ) {
     val density = LocalDensity.current
     val configuredActions = remember(swipeKeyMap) { parseSwipeKeyMap(swipeKeyMap) }
     val labelColor = if (isDark) darkColor else lightColor
-    val textSizePx = with(density) { textSize.sp.toPx() }
+    val textSizePx = with(density) { swipeTextSize.sp.toPx() }
 
     Column(
         modifier = Modifier

@@ -146,6 +146,11 @@ internal object WeTypeSwipeGestureHooks {
     @Volatile
     private var dispatchHooksInitialized: Boolean = false
 
+    // 缓存的 Paint 对象（避免每次绘制重复创建）
+    private var cachedPaint: Paint? = null
+    private var lastColor: Int = 0
+    private var lastTextSizePx: Float = 0f
+
     private fun resetTouch() {
         intercepted = false
         touchDownY = 0f
@@ -308,6 +313,11 @@ internal object WeTypeSwipeGestureHooks {
                 trackedKeyboardView = null
                 resetTouch()
                 flashStartMs = 0L
+                dispatchHooksInitialized = false
+                // 清理缓存的 Paint 对象，确保下次使用时重新创建
+                cachedPaint = null
+                lastColor = 0
+                lastTextSizePx = 0f
             }
 
             // onDestroy：完整清理
@@ -318,6 +328,11 @@ internal object WeTypeSwipeGestureHooks {
                 trackedKeyboardView = null
                 resetTouch()
                 flashStartMs = 0L
+                dispatchHooksInitialized = false
+                // 清理缓存的 Paint 对象
+                cachedPaint = null
+                lastColor = 0
+                lastTextSizePx = 0f
             }
         }.onFailure {
             Log.e("Failed: Hook IMS lifecycle for swipe gesture")
@@ -350,12 +365,8 @@ internal object WeTypeSwipeGestureHooks {
             context.resources.displayMetrics
         )
 
-        val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            color = labelColor
-            textSize = textSizePx
-            textAlign = Paint.Align.CENTER
-            isAntiAlias = true
-        }
+        // 使用缓存的 Paint 对象，仅在配置变更时重新创建
+        val paint = getCachedPaint(labelColor, textSizePx)
 
         for ((keyLabel, action) in configuredActions) {
             val pos = keyMap[keyLabel] ?: continue
@@ -364,6 +375,25 @@ internal object WeTypeSwipeGestureHooks {
             val textY = cy - (paint.fontMetrics.ascent + paint.fontMetrics.descent) / 2f
             canvas.drawText(action.labelShort, cx, textY, paint)
         }
+    }
+
+    /** 获取缓存的 Paint 对象，仅在颜色或字号变更时重新创建 */
+    private fun getCachedPaint(color: Int, textSizePx: Float): Paint {
+        val cached = cachedPaint
+        if (cached != null && lastColor == color && lastTextSizePx == textSizePx) {
+            return cached
+        }
+        // 配置变更，创建新的 Paint
+        val newPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            this.color = color
+            this.textSize = textSizePx
+            textAlign = Paint.Align.CENTER
+            isAntiAlias = true
+        }
+        cachedPaint = newPaint
+        lastColor = color
+        lastTextSizePx = textSizePx
+        return newPaint
     }
 
     // ============================================================
@@ -401,8 +431,16 @@ internal object WeTypeSwipeGestureHooks {
 
     /** 估算触摸点对应的按键标签 */
     private fun estimateKeyAt(view: View, x: Float, y: Float): String? {
+        // 边界检查：确保触摸坐标在有效范围内
+        if (x < 0 || y < 0 || x >= view.width || y >= view.height) {
+            return null
+        }
+
         val isT9 = isT9Keyboard(view.width, view.height)
         val keyMap = if (isT9) T9_KEYS else QWERTY_KEYS
+
+        var nearestKey: String? = null
+        var nearestDistance = Float.MAX_VALUE
 
         for ((keyLabel, pos) in keyMap) {
             val (cx, cy) = keyCenter(keyLabel, pos, view.width, view.height, isT9)
@@ -420,12 +458,22 @@ internal object WeTypeSwipeGestureHooks {
             }
             val halfW = cellW / 2f
             val halfH = cellH / 2f
+
             // 检查触摸点是否在该按键范围内
             if (x in (cx - halfW)..(cx + halfW) && y in (cy - halfH)..(cy + halfH)) {
-                return keyLabel
+                // 计算触摸点到按键中心的距离（使用平方距离避免开方运算）
+                val dx = x - cx
+                val dy = y - cy
+                val distanceSquared = dx * dx + dy * dy
+
+                // 记录最近的按键
+                if (distanceSquared < nearestDistance) {
+                    nearestDistance = distanceSquared
+                    nearestKey = keyLabel
+                }
             }
         }
-        return null
+        return nearestKey
     }
 
     // ============================================================
@@ -505,30 +553,46 @@ internal object WeTypeSwipeGestureHooks {
 
     private fun hideKeyboard(service: InputMethodService) {
         try {
-            val softInputWindow = service.invokeMethodAs<Any>("getWindow")
-            val window = softInputWindow?.invokeMethodAs<Window>("getWindow")
-            val token = window?.decorView?.windowToken
+            // 尝试获取 window token（反射调用非公共 API，需做好兼容性处理）
+            val token = runCatching {
+                val softInputWindow = service.invokeMethodAs<Any>("getWindow")
+                softInputWindow?.invokeMethodAs<Window>("getWindow")?.decorView?.windowToken
+            }.getOrNull()
+
             if (token != null) {
                 val imm = service.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
                 imm?.hideSoftInputFromWindow(token, 0)
+                Log.i("Success: Hide keyboard via swipe")
+            } else {
+                Log.w("Failed: Cannot get window token for hiding keyboard")
             }
         } catch (e: Exception) {
-            Log.e("Failed: Hide keyboard via swipe")
+            Log.e("Failed: Hide keyboard via swipe (API compatibility issue)")
             Log.i(e)
         }
     }
 
     private fun switchIME(service: InputMethodService) {
         try {
-            val softInputWindow = service.invokeMethodAs<Any>("getWindow")
-            val window = softInputWindow?.invokeMethodAs<Window>("getWindow")
-            val token = window?.decorView?.windowToken
+            // 尝试获取 window token（反射调用非公共 API，需做好兼容性处理）
+            val token = runCatching {
+                val softInputWindow = service.invokeMethodAs<Any>("getWindow")
+                softInputWindow?.invokeMethodAs<Window>("getWindow")?.decorView?.windowToken
+            }.getOrNull()
+
             if (token != null) {
                 val imm = service.getSystemService(Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+                // switchToNextInputMethod 参数说明：
+                // - token: 当前 IME 窗口的 token
+                // - onlyCurrentIme: true 表示仅在当前 IME 的子类型间切换（如简体/繁体）
+                //                   false 表示切换到完全不同的 IME 输入法
                 imm?.switchToNextInputMethod(token, false)
+                Log.i("Success: Switch IME via swipe")
+            } else {
+                Log.w("Failed: Cannot get window token for switching IME")
             }
         } catch (e: Exception) {
-            Log.e("Failed: Switch IME via swipe")
+            Log.e("Failed: Switch IME via swipe (API compatibility issue)")
             Log.i(e)
         }
     }
