@@ -55,10 +55,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.clickable
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color as ComposeColor
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
@@ -645,110 +650,122 @@ private fun WeTypeSettingsScreen(
                     insideMargin = PaddingValues(0.dp)
                 ) {
                     Column {
-                        // 模式切换 - 使用 TabRow
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.settings_section_mode),
-                                style = MiuixTheme.textStyles.main
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            val tabs = listOf(
-                                stringResource(R.string.settings_light_mode),
-                                stringResource(R.string.settings_dark_mode)
-                            )
-                            TabRowWithContour(
-                                tabs = tabs,
-                                selectedTabIndex = if (currentModeIsDark) 1 else 0,
-                                onTabSelected = { index ->
-                                    val newDarkMode = index == 1
-                                    if (newDarkMode != currentModeIsDark) {
-                                        currentModeIsDark = newDarkMode
-                                        syncEditorFromState()
-                                    }
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-
-                        // 透明度滑块
-                        SliderPreferenceItem(
-                            title = stringResource(R.string.settings_alpha_title),
-                            value = alphaValue,
-                            max = 255,
-                            onValueChange = {
-                                alphaValue = it
-                                val rgb = currentColor() and 0xFFFFFF
-                                updateColorFromArgb((alphaValue shl 24) or rgb)
-                                colorInput = formatRgb(currentColor())
-                            }
+                        // 自定义颜色开关 - 放在所有颜色配置顶部
+                        MiuixSwitchWidget(
+                            title = stringResource(R.string.settings_color_customization_title),
+                            description = stringResource(R.string.settings_color_customization_desc),
+                            checked = colorCustomizationEnabled,
+                            onCheckedChange = { colorCustomizationEnabled = it }
                         )
 
-                        Column(
-                            modifier = Modifier.padding(16.dp)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.settings_custom_color),
-                                style = MiuixTheme.textStyles.main
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = stringResource(R.string.settings_color_helper),
-                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                style = MiuixTheme.textStyles.body2
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                            TextField(
-                                value = colorInput,
-                                onValueChange = { input ->
-                                    val trimmed = input.trim()
-                                    val hasPrefix = trimmed.startsWith("#")
-                                    val body = trimmed.removePrefix("#")
-                                    if (body.length > 6 || !body.matches(Regex("^[0-9a-fA-F]*$"))) {
-                                        return@TextField
-                                    }
+                        if (colorCustomizationEnabled) {
+                            HorizontalDivider()
 
-                                    colorInput = if (hasPrefix || body.isNotEmpty()) "#$body" else ""
-
-                                    if (body.length == 6) {
-                                        runCatching {
-                                            val opaque = Color.parseColor("#$body")
-                                            val argb = Color.argb(
-                                                alphaValue.coerceIn(0, 255),
-                                                Color.red(opaque),
-                                                Color.green(opaque),
-                                                Color.blue(opaque)
-                                            )
-                                            updateColorFromArgb(argb)
+                            // 模式切换 - 使用 TabRow
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.settings_section_mode),
+                                    style = MiuixTheme.textStyles.main
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                val tabs = listOf(
+                                    stringResource(R.string.settings_light_mode),
+                                    stringResource(R.string.settings_dark_mode)
+                                )
+                                TabRowWithContour(
+                                    tabs = tabs,
+                                    selectedTabIndex = if (currentModeIsDark) 1 else 0,
+                                    onTabSelected = { index ->
+                                        val newDarkMode = index == 1
+                                        if (newDarkMode != currentModeIsDark) {
+                                            currentModeIsDark = newDarkMode
+                                            syncEditorFromState()
                                         }
-                                    }
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+
+                            // 透明度滑块
+                            SliderPreferenceItem(
+                                title = stringResource(R.string.settings_alpha_title),
+                                value = alphaValue,
+                                max = 255,
+                                onValueChange = {
+                                    alphaValue = it
+                                    val rgb = currentColor() and 0xFFFFFF
+                                    updateColorFromArgb((alphaValue shl 24) or rgb)
+                                    colorInput = formatRgb(currentColor())
+                                }
+                            )
+
+                            Column(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.settings_custom_color),
+                                    style = MiuixTheme.textStyles.main
+                                )
+                                Spacer(modifier = Modifier.height(2.dp))
+                                Text(
+                                    text = stringResource(R.string.settings_color_helper),
+                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    style = MiuixTheme.textStyles.body2
+                                )
+                                Spacer(modifier = Modifier.height(12.dp))
+                                TextField(
+                                    value = colorInput,
+                                    onValueChange = { input ->
+                                        val trimmed = input.trim()
+                                        val hasPrefix = trimmed.startsWith("#")
+                                        val body = trimmed.removePrefix("#")
+                                        if (body.length > 6 || !body.matches(Regex("^[0-9a-fA-F]*$"))) {
+                                            return@TextField
+                                        }
+
+                                        colorInput = if (hasPrefix || body.isNotEmpty()) "#$body" else ""
+
+                                        if (body.length == 6) {
+                                            runCatching {
+                                                val opaque = Color.parseColor("#$body")
+                                                val argb = Color.argb(
+                                                    alphaValue.coerceIn(0, 255),
+                                                    Color.red(opaque),
+                                                    Color.green(opaque),
+                                                    Color.blue(opaque)
+                                                )
+                                                updateColorFromArgb(argb)
+                                            }
+                                        }
+                                    },
+                                    label = stringResource(R.string.settings_color_label),
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+
+                            val currentKeyGroup = keyColorGroup(currentModeIsDark)
+                            val currentKeyGroupIndex = groupIndex(currentKeyGroup.id)
+
+                            KeyColorEditor(
+                                title = if (currentModeIsDark) {
+                                    stringResource(R.string.settings_dark_key_color_title)
+                                } else {
+                                    stringResource(R.string.settings_light_key_color_title)
                                 },
-                                label = stringResource(R.string.settings_color_label),
-                                singleLine = true,
-                                modifier = Modifier.fillMaxWidth()
+                                summary = stringResource(
+                                    R.string.settings_key_color_group_summary,
+                                    Color.alpha(appearanceGroupColors[currentKeyGroupIndex]),
+                                    currentKeyGroup.entryCount
+                                ),
+                                color = appearanceGroupColors[currentKeyGroupIndex],
+                                onColorChange = { appearanceGroupColors[currentKeyGroupIndex] = it }
                             )
                         }
-
-                        val currentKeyGroup = keyColorGroup(currentModeIsDark)
-                        val currentKeyGroupIndex = groupIndex(currentKeyGroup.id)
-
-                        KeyColorEditor(
-                            title = if (currentModeIsDark) {
-                                stringResource(R.string.settings_dark_key_color_title)
-                            } else {
-                                stringResource(R.string.settings_light_key_color_title)
-                            },
-                            summary = stringResource(
-                                R.string.settings_key_color_group_summary,
-                                Color.alpha(appearanceGroupColors[currentKeyGroupIndex]),
-                                currentKeyGroup.entryCount
-                            ),
-                            color = appearanceGroupColors[currentKeyGroupIndex],
-                            onColorChange = { appearanceGroupColors[currentKeyGroupIndex] = it }
-                        )
                     }
                 }
             }
@@ -875,15 +892,6 @@ private fun WeTypeSettingsScreen(
                 ) {
                     Column {
                         MiuixSwitchWidget(
-                            title = stringResource(R.string.settings_color_customization_title),
-                            description = stringResource(R.string.settings_color_customization_desc),
-                            checked = colorCustomizationEnabled,
-                            onCheckedChange = { colorCustomizationEnabled = it }
-                        )
-
-                        HorizontalDivider()
-
-                        MiuixSwitchWidget(
                             title = stringResource(R.string.settings_disable_hot_update_title),
                             description = stringResource(R.string.settings_disable_hot_update_desc),
                             checked = disableHotUpdate,
@@ -989,30 +997,39 @@ private fun WeTypeSettingsScreen(
                                     }
                                 )
                             }
+                            // 预设说明
+                            Column(
+                                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.swipe_preset_edit_desc),
+                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    style = MiuixTheme.textStyles.body2
+                                )
+                                Text(
+                                    text = stringResource(R.string.swipe_preset_quick_desc),
+                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    style = MiuixTheme.textStyles.body2
+                                )
+                            }
 
                             HorizontalDivider()
 
-                            // 导出/导入
-                            BasicComponent(
-                                title = stringResource(R.string.swipe_export_title),
-                                summary = stringResource(R.string.swipe_export_desc),
-                                onClick = {
-                                    exportSwipeConfig(context, swipeKeyMap)
-                                }
+                            // 自定义按键映射
+                            SwipeCustomConfigSection(
+                                swipeKeyMap = swipeKeyMap,
+                                onSwipeKeyMapChange = { swipeKeyMap = it }
                             )
 
                             HorizontalDivider()
 
-                            BasicComponent(
-                                title = stringResource(R.string.swipe_import_title),
-                                summary = stringResource(R.string.swipe_import_desc),
-                                onClick = {
-                                    val result = importSwipeConfig(context)
-                                    if (result != null) {
-                                        swipeKeyMap = result
-                                        Toast.makeText(context, R.string.swipe_import_success, Toast.LENGTH_SHORT).show()
-                                    }
-                                }
+                            // 手势预览
+                            SwipePreviewSection(
+                                swipeKeyMap = swipeKeyMap,
+                                isDark = isSystemInDarkTheme(),
+                                lightColor = swipeLightColor,
+                                darkColor = swipeDarkColor,
+                                textSize = swipeTextSize
                             )
                         }
                     }
@@ -1037,6 +1054,80 @@ private fun WeTypeSettingsScreen(
 
                         HorizontalDivider()
 
+                        // 导出全部设置
+                        BasicComponent(
+                            title = stringResource(R.string.actions_export_title),
+                            summary = stringResource(R.string.actions_export_desc),
+                            onClick = {
+                                exportAllConfig(
+                                    context = context,
+                                    lightColor = lightColor,
+                                    darkColor = darkColor,
+                                    blurRadius = blurRadius,
+                                    cornerRadius = cornerRadius,
+                                    keyCornerRadius = keyCornerRadius,
+                                    edgeHighlightEnabled = edgeHighlightEnabled,
+                                    edgeHighlightIntensity = edgeHighlightIntensity,
+                                    candidateBackgroundAlpha = candidateBackgroundAlpha,
+                                    candidateBackgroundCorner = candidateBackgroundCorner,
+                                    candidateBackgroundLeftMarginDp = candidateBackgroundLeftMarginDp,
+                                    candidatePinyinLeftMarginDp = candidatePinyinLeftMarginDp,
+                                    toolbarIconBgOpacity = toolbarIconBgOpacity,
+                                    appearanceColors = currentAppearanceColors(),
+                                    colorCustomizationEnabled = colorCustomizationEnabled,
+                                    disableHotUpdate = disableHotUpdate,
+                                    swipeEnabled = swipeEnabled,
+                                    swipeLightColor = swipeLightColor,
+                                    swipeDarkColor = swipeDarkColor,
+                                    swipeTextSize = swipeTextSize,
+                                    swipeThreshold = swipeThreshold,
+                                    swipeKeyMap = swipeKeyMap
+                                )
+                            }
+                        )
+
+                        HorizontalDivider()
+
+                        // 导入全部设置
+                        BasicComponent(
+                            title = stringResource(R.string.actions_import_title),
+                            summary = stringResource(R.string.actions_import_desc),
+                            onClick = {
+                                val loaded = importAllConfig(context)
+                                if (loaded != null) {
+                                    lightColor = loaded.lightColor
+                                    darkColor = loaded.darkColor
+                                    blurRadius = loaded.blurRadius
+                                    cornerRadius = loaded.cornerRadius
+                                    keyCornerRadius = loaded.keyCornerRadius
+                                    edgeHighlightEnabled = loaded.edgeHighlightEnabled
+                                    edgeHighlightIntensity = loaded.edgeHighlightIntensity
+                                    candidateBackgroundAlpha = loaded.candidateBackgroundAlpha
+                                    candidateBackgroundCorner = loaded.candidateBackgroundCorner.roundToInt()
+                                    candidateBackgroundLeftMarginDp = loaded.candidateBackgroundLeftMarginDp.toString()
+                                    candidatePinyinLeftMarginDp = loaded.candidatePinyinLeftMarginDp.toString()
+                                    toolbarIconBgOpacity = loaded.toolbarIconBgOpacity
+                                    colorCustomizationEnabled = loaded.colorCustomizationEnabled
+                                    disableHotUpdate = loaded.disableHotUpdate
+                                    swipeEnabled = loaded.swipeEnabled
+                                    swipeLightColor = loaded.swipeLightColor
+                                    swipeDarkColor = loaded.swipeDarkColor
+                                    swipeTextSize = loaded.swipeTextSize
+                                    swipeThreshold = loaded.swipeThreshold
+                                    swipeKeyMap = loaded.swipeKeyMap
+                                    loaded.appearanceColors.forEach { (id, color) ->
+                                        val idx = appearanceGroups.indexOfFirst { it.id == id }
+                                        if (idx >= 0) appearanceGroupColors[idx] = color
+                                    }
+                                    syncEditorFromState()
+                                    saveSettings(showSavedToast = false)
+                                    Toast.makeText(context, R.string.actions_import_success, Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        )
+
+                        HorizontalDivider()
+
                         BasicComponent(
                             title = stringResource(R.string.settings_visit_github_title),
                             titleColor = BasicComponentDefaults.titleColor(
@@ -1045,7 +1136,7 @@ private fun WeTypeSettingsScreen(
                             onClick = {
                                 val intent = Intent(
                                     Intent.ACTION_VIEW,
-                                    Uri.parse("https://github.com/NEORUAA/MIUI_IME_Unlock")
+                                    Uri.parse("https://github.com/liulei92/WeTypeEnhancer")
                                 )
                                 context.startActivity(intent)
                             }
@@ -1641,50 +1732,394 @@ private fun SwipeColorInput(
     }
 }
 
-/** 导出下滑配置到剪贴板 */
-private fun exportSwipeConfig(context: Context, json: String) {
-    if (json.isBlank()) {
-        Toast.makeText(context, R.string.swipe_no_keys_configured, Toast.LENGTH_SHORT).show()
-        return
-    }
-    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    clipboard.setPrimaryClip(ClipData.newPlainText("swipe_config", json))
-    Toast.makeText(context, R.string.swipe_export_success, Toast.LENGTH_SHORT).show()
+// ===== 下滑手势自定义配置组件 =====
+
+/** 解析下滑键映射 JSON 字符串为 Map */
+private fun parseSwipeKeyMap(json: String): Map<String, SwipeAction> {
+    if (json.isBlank()) return emptyMap()
+    return runCatching {
+        val obj = JSONObject(json)
+        val idToAction = SwipeAction.entries.associateBy { it.id }
+        obj.keys().asSequence().mapNotNull { key ->
+            val actionId = obj.optString(key, "")
+            idToAction[actionId]?.let { action -> key to action }
+        }.toMap()
+    }.getOrDefault(emptyMap())
 }
 
-/** 从剪贴板导入下滑配置，校验后返回 JSON 字符串，格式无效则返回 null */
-private fun importSwipeConfig(context: Context): String? {
+/** 自定义按键映射配置 UI */
+@Composable
+private fun SwipeCustomConfigSection(
+    swipeKeyMap: String,
+    onSwipeKeyMapChange: (String) -> Unit
+) {
+    val currentConfig = remember(swipeKeyMap) { parseSwipeKeyMap(swipeKeyMap) }
+    var selectedKey by remember { mutableStateOf("") }
+    val qwertyRows = remember {
+        listOf(
+            listOf("Q","W","E","R","T","Y","U","I","O","P"),
+            listOf("A","S","D","F","G","H","J","K","L"),
+            listOf("Z","X","C","V","B","N","M")
+        )
+    }
+    val t9Keys = remember { listOf("2","3","4","5","6","7","8","9") }
+
+    fun updateKeyAction(key: String, action: SwipeAction?) {
+        val mutable = currentConfig.toMutableMap()
+        if (action != null) mutable[key] = action else mutable.remove(key)
+        onSwipeKeyMapChange(SwipePresets.presetToJson(mutable))
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.swipe_custom_config_title),
+            style = MiuixTheme.textStyles.main
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = stringResource(R.string.swipe_custom_config_label),
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            style = MiuixTheme.textStyles.body2
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = stringResource(R.string.swipe_custom_config_select_key),
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            style = MiuixTheme.textStyles.body2
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // QWERTY 键盘行
+        for (row in qwertyRows) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                row.forEach { key ->
+                    val isSelected = selectedKey == key
+                    val hasAction = currentConfig.containsKey(key)
+                    Box(
+                        modifier = Modifier
+                            .padding(2.dp)
+                            .clip(ContinuousRoundedRectangle(6.dp))
+                            .background(
+                                when {
+                                    isSelected -> MiuixTheme.colorScheme.primary
+                                    hasAction -> MiuixTheme.colorScheme.secondaryContainer
+                                    else -> MiuixTheme.colorScheme.surfaceVariant
+                                }
+                            )
+                            .clickable { selectedKey = key }
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = key,
+                            style = MiuixTheme.textStyles.body2,
+                            color = if (isSelected) MiuixTheme.colorScheme.onPrimary else MiuixTheme.colorScheme.onSurface
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // T9 数字键
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
+        ) {
+            t9Keys.forEach { key ->
+                val isSelected = selectedKey == key
+                val hasAction = currentConfig.containsKey(key)
+                Box(
+                    modifier = Modifier
+                        .padding(2.dp)
+                        .clip(ContinuousRoundedRectangle(6.dp))
+                        .background(
+                            when {
+                                isSelected -> MiuixTheme.colorScheme.primary
+                                hasAction -> MiuixTheme.colorScheme.secondaryContainer
+                                else -> MiuixTheme.colorScheme.surfaceVariant
+                            }
+                        )
+                        .clickable { selectedKey = key }
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = key,
+                        style = MiuixTheme.textStyles.body2,
+                        color = if (isSelected) MiuixTheme.colorScheme.onPrimary else MiuixTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (selectedKey.isNotEmpty()) {
+            // 显示选中按键的当前动作
+            val currentAction = currentConfig[selectedKey]
+            Text(
+                text = stringResource(R.string.swipe_custom_config_select_action),
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                style = MiuixTheme.textStyles.body2
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 显示所有可用动作
+            SwipeAction.entries.forEach { action ->
+                val isActiveAction = currentAction == action
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(ContinuousRoundedRectangle(8.dp))
+                        .background(
+                            if (isActiveAction) MiuixTheme.colorScheme.primaryContainer
+                            else MiuixTheme.colorScheme.surfaceVariant
+                        )
+                        .clickable { updateKeyAction(selectedKey, action) }
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = action.labelZh,
+                        style = MiuixTheme.textStyles.main,
+                        modifier = Modifier.weight(1f)
+                    )
+                    if (isActiveAction) {
+                        Icon(
+                            imageVector = MiuixIcons.Ok,
+                            contentDescription = null,
+                            tint = MiuixTheme.colorScheme.primary
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
+            // 移除该按键配置（清空映射）
+            if (currentAction != null) {
+                Spacer(modifier = Modifier.height(4.dp))
+                BasicComponent(
+                    title = stringResource(R.string.swipe_custom_config_remove),
+                    onClick = { updateKeyAction(selectedKey, null) }
+                )
+            }
+        } else if (currentConfig.isEmpty()) {
+            Text(
+                text = stringResource(R.string.swipe_custom_config_no_data),
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                style = MiuixTheme.textStyles.body2
+            )
+        }
+    }
+}
+
+/** 下滑手势效果预览 */
+@Composable
+private fun SwipePreviewSection(
+    swipeKeyMap: String,
+    isDark: Boolean,
+    lightColor: Int,
+    darkColor: Int,
+    textSize: Int
+) {
+    val density = LocalDensity.current
+    val configuredActions = remember(swipeKeyMap) { parseSwipeKeyMap(swipeKeyMap) }
+    val labelColor = if (isDark) darkColor else lightColor
+    val textSizePx = with(density) { textSize.sp.toPx() }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.swipe_preview_title),
+            style = MiuixTheme.textStyles.main
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = stringResource(R.string.swipe_preview_desc),
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            style = MiuixTheme.textStyles.body2
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (configuredActions.isEmpty()) {
+            Text(
+                text = stringResource(R.string.swipe_no_keys_configured),
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                style = MiuixTheme.textStyles.body2
+            )
+        } else {
+            androidx.compose.foundation.Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(140.dp)
+                    .clip(ContinuousRoundedRectangle(8.dp))
+                    .background(MiuixTheme.colorScheme.surfaceVariant)
+            ) {
+                val viewW = size.width
+                val viewH = size.height
+                val cellH = viewH / 4f
+
+                val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG).apply {
+                    color = labelColor
+                    textSize = textSizePx
+                    textAlign = android.graphics.Paint.Align.CENTER
+                    isAntiAlias = true
+                }
+
+                val rows = listOf(
+                    listOf("Q","W","E","R","T","Y","U","I","O","P"),
+                    listOf("A","S","D","F","G","H","J","K","L"),
+                    listOf("Z","X","C","V","B","N","M")
+                )
+                val rowCols = intArrayOf(10, 9, 7)
+                val rowIndents = floatArrayOf(0f, 0.05f, 0.15f)
+
+                for ((rowIdx, rowKeys) in rows.withIndex()) {
+                    val cols = rowCols[rowIdx]
+                    val indent = rowIndents[rowIdx]
+                    val usableW = viewW * (1f - 2f * indent)
+                    val cellW = usableW / cols
+                    val offsetX = indent * viewW
+                    val cy = (rowIdx + 1) * cellH + cellH / 2f
+
+                    for ((colIdx, keyLabel) in rowKeys.withIndex()) {
+                        val cx = offsetX + colIdx * cellW + cellW / 2f
+                        val action = configuredActions[keyLabel]
+                        if (action != null) {
+                            drawRoundRect(
+                                color = ComposeColor(0x33000000),
+                                topLeft = Offset(cx - cellW / 2f + 2f, cy - cellH / 2f + 2f),
+                                size = Size(cellW - 4f, cellH - 4f),
+                                cornerRadius = CornerRadius(4f)
+                            )
+                            drawContext.canvas.nativeCanvas.drawText(
+                                action.labelShort,
+                                cx,
+                                cy - (paint.fontMetrics.ascent + paint.fontMetrics.descent) / 2f,
+                                paint
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** 导出全部设置到剪贴板 */
+private fun exportAllConfig(
+    context: Context,
+    lightColor: Int,
+    darkColor: Int,
+    blurRadius: Int,
+    cornerRadius: Int,
+    keyCornerRadius: Int,
+    edgeHighlightEnabled: Boolean,
+    edgeHighlightIntensity: Int,
+    candidateBackgroundAlpha: Int,
+    candidateBackgroundCorner: Int,
+    candidateBackgroundLeftMarginDp: String,
+    candidatePinyinLeftMarginDp: String,
+    toolbarIconBgOpacity: Int,
+    appearanceColors: Map<String, Int>,
+    colorCustomizationEnabled: Boolean,
+    disableHotUpdate: Boolean,
+    swipeEnabled: Boolean,
+    swipeLightColor: Int,
+    swipeDarkColor: Int,
+    swipeTextSize: Int,
+    swipeThreshold: Int,
+    swipeKeyMap: String
+) {
+    val json = JSONObject().apply {
+        put("version", 1)
+        put("lightColor", lightColor)
+        put("darkColor", darkColor)
+        put("blurRadius", blurRadius)
+        put("cornerRadius", cornerRadius)
+        put("keyCornerRadius", keyCornerRadius)
+        put("edgeHighlightEnabled", edgeHighlightEnabled)
+        put("edgeHighlightIntensity", edgeHighlightIntensity)
+        put("candidateBackgroundAlpha", candidateBackgroundAlpha)
+        put("candidateBackgroundCorner", candidateBackgroundCorner.toDouble())
+        put("candidateBackgroundLeftMarginDp", candidateBackgroundLeftMarginDp.toIntOrNull() ?: WeTypeSettings.DEFAULT_CANDIDATE_BACKGROUND_LEFT_MARGIN_DP)
+        put("candidatePinyinLeftMarginDp", candidatePinyinLeftMarginDp.toIntOrNull() ?: WeTypeSettings.DEFAULT_CANDIDATE_PINYIN_LEFT_MARGIN_DP)
+        put("toolbarIconBgOpacity", toolbarIconBgOpacity)
+        put("colorCustomizationEnabled", colorCustomizationEnabled)
+        put("disableHotUpdate", disableHotUpdate)
+        put("swipeEnabled", swipeEnabled)
+        put("swipeLightColor", swipeLightColor)
+        put("swipeDarkColor", swipeDarkColor)
+        put("swipeTextSize", swipeTextSize)
+        put("swipeThreshold", swipeThreshold)
+        put("swipeKeyMap", swipeKeyMap)
+        put("appearanceColors", JSONObject(appearanceColors))
+    }
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboard.setPrimaryClip(ClipData.newPlainText("wetype_all_config", json.toString(2)))
+    Toast.makeText(context, R.string.actions_export_success, Toast.LENGTH_SHORT).show()
+}
+
+/** 从剪贴板导入全部设置，返回 Snapshot，格式无效则返回 null */
+private fun importAllConfig(context: Context): WeTypeSettings.Snapshot? {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     val clip = clipboard.primaryClip ?: run {
-        Toast.makeText(context, R.string.swipe_import_error_format, Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, R.string.actions_import_error, Toast.LENGTH_SHORT).show()
         return null
     }
     val input = (clip.getItemAt(0)?.text?.toString() ?: "").trim()
     if (input.isBlank()) {
-        Toast.makeText(context, R.string.swipe_import_error_format, Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, R.string.actions_import_error, Toast.LENGTH_SHORT).show()
         return null
     }
-    // 校验 JSON 格式
-    val obj = try {
-        org.json.JSONObject(input)
-    } catch (_: Exception) {
-        Toast.makeText(context, R.string.swipe_import_error_format, Toast.LENGTH_SHORT).show()
-        return null
+    return try {
+        val obj = JSONObject(input)
+        if (obj.optInt("version", 0) != 1) error("Invalid version")
+        val appearanceColorsObj = obj.optJSONObject("appearanceColors")
+        WeTypeSettings.Snapshot(
+            lightColor = obj.getInt("lightColor"),
+            darkColor = obj.getInt("darkColor"),
+            blurRadius = obj.getInt("blurRadius"),
+            cornerRadius = obj.getInt("cornerRadius"),
+            keyCornerRadius = obj.getInt("keyCornerRadius"),
+            edgeHighlightEnabled = obj.getBoolean("edgeHighlightEnabled"),
+            edgeHighlightIntensity = obj.getInt("edgeHighlightIntensity"),
+            candidateBackgroundAlpha = obj.getInt("candidateBackgroundAlpha"),
+            candidateBackgroundCorner = obj.getDouble("candidateBackgroundCorner").toFloat(),
+            candidateBackgroundLeftMarginDp = obj.getInt("candidateBackgroundLeftMarginDp"),
+            candidatePinyinLeftMarginDp = obj.getInt("candidatePinyinLeftMarginDp"),
+            toolbarIconBgOpacity = obj.getInt("toolbarIconBgOpacity"),
+            colorCustomizationEnabled = obj.getBoolean("colorCustomizationEnabled"),
+            disableHotUpdate = obj.getBoolean("disableHotUpdate"),
+            swipeEnabled = obj.getBoolean("swipeEnabled"),
+            swipeLightColor = obj.getInt("swipeLightColor"),
+            swipeDarkColor = obj.getInt("swipeDarkColor"),
+            swipeTextSize = obj.getInt("swipeTextSize"),
+            swipeThreshold = obj.getInt("swipeThreshold"),
+            swipeKeyMap = obj.getString("swipeKeyMap"),
+            appearanceColors = if (appearanceColorsObj != null) {
+                appearanceColorsObj.keys().asSequence().mapNotNull { key ->
+                    if (appearanceColorsObj.has(key)) key to appearanceColorsObj.getInt(key) else null
+                }.toMap()
+            } else emptyMap()
+        )
+    } catch (e: Exception) {
+        Toast.makeText(context, R.string.actions_import_error, Toast.LENGTH_SHORT).show()
+        null
     }
-    // 校验每个 action ID 是否合法
-    val validIds = SwipeAction.entries.map { it.id }.toSet()
-    for (key in obj.keys()) {
-        val actionId = obj.optString(key, "")
-        if (actionId !in validIds) {
-            Toast.makeText(
-                context,
-                context.getString(R.string.swipe_import_error_action, actionId),
-                Toast.LENGTH_SHORT
-            ).show()
-            return null
-        }
-    }
-    return input
 }
 
 private fun previewTextColor(color: Int): ComposeColor =

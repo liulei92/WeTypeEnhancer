@@ -126,4 +126,30 @@
     <string name="swipe_import_success">配置导入成功</string>
     <string name="swipe_export_success">配置已复制到剪贴板</string>
     <string name="swipe_no_keys_configured">暂无按键配置</string>
+
+    <!-- 预设说明 -->
+    <string name="swipe_preset_edit_desc">Q:复制 W:剪切 E:粘贴 R:全选 T:清空 · A:段首 S:段尾 · Z:复制 X:剪切 C:粘贴 · 5:全选 8:粘贴</string>
+    <string name="swipe_preset_quick_desc">Q:剪贴板 W:设置 E:复制 R:粘贴 · A:隐藏键盘 S:切换输入法 · Z:剪贴板 · 5:复制 8:粘贴</string>
+
+    <!-- 自定义按键配置 -->
+    <string name="swipe_custom_config_title">自定义按键映射</string>
+    <string name="swipe_custom_config_label">为每个按键单独配置下滑动作</string>
+    <string name="swipe_custom_config_select_key">选择按键</string>
+    <string name="swipe_custom_config_select_action">选择动作</string>
+    <string name="swipe_custom_config_add">添加映射</string>
+    <string name="swipe_custom_config_remove">移除</string>
+    <string name="swipe_custom_config_no_data">尚未配置任何按键，请使用下方控件添加映射。</string>
+
+    <!-- 下滑预览 -->
+    <string name="swipe_preview_title">手势预览</string>
+    <string name="swipe_preview_desc">预览下滑手势在键盘按键上显示的标签文字</string>
+
+    <!-- 操作：导出/导入全量配置 -->
+    <string name="actions_export_title">导出全部设置</string>
+    <string name="actions_export_desc">将所有设置复制到剪贴板</string>
+    <string name="actions_import_title">导入全部设置</string>
+    <string name="actions_import_desc">从剪贴板导入所有设置</string>
+    <string name="actions_import_error">设置格式无效</string>
+    <string name="actions_import_success">设置导入成功，请重启输入法以生效</string>
+    <string name="actions_export_success">设置已复制到剪贴板</string>
 </resources>

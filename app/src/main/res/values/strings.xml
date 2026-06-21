@@ -126,4 +126,30 @@
     <string name="swipe_import_success">Config imported successfully</string>
     <string name="swipe_export_success">Config copied to clipboard</string>
     <string name="swipe_no_keys_configured">No keys configured</string>
+
+    <!-- Preset descriptions -->
+    <string name="swipe_preset_edit_desc">Q:Copy W:Cut E:Paste R:SelectAll T:Clear · A:LineStart S:LineEnd · Z:Copy X:Cut C:Paste · 5:SelectAll 8:Paste</string>
+    <string name="swipe_preset_quick_desc">Q:Clipboard W:Settings E:Copy R:Paste · A:HideKeyboard S:SwitchIME · Z:Clipboard · 5:Copy 8:Paste</string>
+
+    <!-- Custom key config -->
+    <string name="swipe_custom_config_title">Custom key mapping</string>
+    <string name="swipe_custom_config_label">Configure actions for individual keys</string>
+    <string name="swipe_custom_config_select_key">Select key</string>
+    <string name="swipe_custom_config_select_action">Select action</string>
+    <string name="swipe_custom_config_add">Add mapping</string>
+    <string name="swipe_custom_config_remove">Remove</string>
+    <string name="swipe_custom_config_no_data">No keys configured yet. Use the controls below to add mappings.</string>
+
+    <!-- Swipe preview -->
+    <string name="swipe_preview_title">Gesture preview</string>
+    <string name="swipe_preview_desc">Preview the swipe label text on keyboard keys</string>
+
+    <!-- Actions: Export/Import all config -->
+    <string name="actions_export_title">Export all settings</string>
+    <string name="actions_export_desc">Copy all settings to clipboard</string>
+    <string name="actions_import_title">Import all settings</string>
+    <string name="actions_import_desc">Import all settings from clipboard</string>
+    <string name="actions_import_error">Invalid settings format</string>
+    <string name="actions_import_success">Settings imported successfully, restart WeType to apply</string>
+    <string name="actions_export_success">Settings copied to clipboard</string>
 </resources>

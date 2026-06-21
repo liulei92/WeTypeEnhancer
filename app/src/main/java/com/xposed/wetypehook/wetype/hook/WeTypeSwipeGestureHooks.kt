@@ -142,6 +142,10 @@ internal object WeTypeSwipeGestureHooks {
     // 闪烁状态
     private var flashStartMs: Long = 0L
 
+    // dispatch hook 是否已初始化（只 hook 一次）
+    @Volatile
+    private var dispatchHooksInitialized: Boolean = false
+
     private fun resetTouch() {
         intercepted = false
         touchDownY = 0f
@@ -163,19 +167,24 @@ internal object WeTypeSwipeGestureHooks {
     // 入口：注册所有 Hook
     // ============================================================
     fun hookSwipeGesture() {
-        hookViewDispatchDraw()
-        hookViewDispatchTouchEvent()
         hookIMSLifecycle()
         Log.i("Success: Hook swipe gesture")
     }
 
-    // ============================================================
-    // dispatchDraw hookAfter：在键盘绘制完成后绘制标签
-    // ============================================================
-    private fun hookViewDispatchDraw() {
+    /**
+     * 在获取到键盘 View 实例后，动态 hook 其实际类的 dispatch 方法。
+     * 使用 [findMethodInHierarchy] 找到最子类的重写版本，确保 hook 能触发。
+     */
+    private fun initDynamicDispatchHooks(viewInstance: View) {
+        if (dispatchHooksInitialized) return
+        dispatchHooksInitialized = true
+
+        val clazz = viewInstance.javaClass
+        Log.i("Swipe gesture: initializing dispatch hooks on ${clazz.name}")
+
+        // Hook dispatchDraw（hookAfter 绘制标签）
         runCatching {
-            val viewClass = loadClassOrNull("android.view.View") ?: error("View class not found")
-            val dispatchDrawMethod = viewClass.findMethod {
+            val dispatchDrawMethod = clazz.findMethodInHierarchy {
                 name == "dispatchDraw" && parameterTypes.sameAs(Canvas::class.java)
             }
             dispatchDrawMethod.hookAfter { param ->
@@ -190,19 +199,15 @@ internal object WeTypeSwipeGestureHooks {
                 // 绘制标签
                 drawKeyLabels(view, canvas)
             }
+            Log.i("Success: Hook dispatchDraw on ${clazz.name}")
         }.onFailure {
             Log.e("Failed: Hook dispatchDraw for swipe gesture")
             Log.i(it)
         }
-    }
 
-    // ============================================================
-    // dispatchTouchEvent hookBefore：检测下滑手势
-    // ============================================================
-    private fun hookViewDispatchTouchEvent() {
+        // Hook dispatchTouchEvent（hookBefore 检测下滑）
         runCatching {
-            val viewClass = loadClassOrNull("android.view.View") ?: error("View class not found")
-            val dispatchTouchEventMethod = viewClass.findMethod {
+            val dispatchTouchEventMethod = clazz.findMethodInHierarchy {
                 name == "dispatchTouchEvent" && parameterTypes.sameAs(MotionEvent::class.java)
             }
             dispatchTouchEventMethod.hookBefore { param ->
@@ -257,11 +262,17 @@ internal object WeTypeSwipeGestureHooks {
                     }
                 }
             }
+            Log.i("Success: Hook dispatchTouchEvent on ${clazz.name}")
         }.onFailure {
             Log.e("Failed: Hook dispatchTouchEvent for swipe gesture")
             Log.i(it)
         }
     }
+
+    // ============================================================
+    // dispatchDraw hookAfter：在键盘绘制完成后绘制标签
+    // ============================================================
+    // 移至 initDynamicDispatchHooks，在获取键盘 View 实例后动态注册
 
     // ============================================================
     // IMS 生命周期 Hook：跟踪键盘容器 View
@@ -279,8 +290,14 @@ internal object WeTypeSwipeGestureHooks {
             }.hookAfter { param ->
                 val ims = param.thisObject as? InputMethodService ?: return@hookAfter
                 currentIMS = ims
-                trackedKeyboardView = ims.invokeMethodAs<View>("getCurrentInputView")
-                Log.i("Swipe gesture: tracked keyboard view registered")
+                val keyboardView = ims.invokeMethodAs<View>("getCurrentInputView")
+                if (keyboardView != null) {
+                    trackedKeyboardView = keyboardView
+                    initDynamicDispatchHooks(keyboardView)
+                    Log.i("Swipe gesture: tracked keyboard view registered, class=${keyboardView.javaClass.name}")
+                } else {
+                    Log.i("Swipe gesture: keyboard view is null in onStartInputView")
+                }
             }
 
             // onFinishInputView：清理
