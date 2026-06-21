@@ -51,6 +51,9 @@
     <string name="settings_disable_hot_update_title">Disable hot update</string>
     <string name="settings_disable_hot_update_desc">Block WeType hotfix updates</string>
 
+    <string name="settings_color_customization_title">Enable color customization</string>
+    <string name="settings_color_customization_desc">When disabled, colors will revert to the WeType default, while other effects (blur, corners, edge highlight) remain active.</string>
+
     <string name="settings_preview_title">Effect preview</string>
     <string name="settings_preview_mode_light">Light mode</string>
     <string name="settings_preview_mode_dark">Dark mode</string>
@@ -97,4 +100,30 @@
     <string name="activation_active_title">Module is active</string>
     <string name="activation_active_summary">Tap the button below to enter the embedded WeType settings page.</string>
     <string name="activation_open_embedded_settings">Open WeType settings</string>
+
+    <!-- Swipe Gesture -->
+    <string name="swipe_group_title">Swipe Gesture</string>
+    <string name="swipe_enabled_title">Enable swipe gesture</string>
+    <string name="swipe_enabled_desc">Swipe down on keys to trigger custom actions</string>
+    <string name="swipe_light_color_title">Label color (light)</string>
+    <string name="swipe_light_color_desc">Label color in light mode</string>
+    <string name="swipe_dark_color_title">Label color (dark)</string>
+    <string name="swipe_dark_color_desc">Label color in dark mode</string>
+    <string name="swipe_text_size_title">Label text size</string>
+    <string name="swipe_text_size_desc">Size of the label text on keys</string>
+    <string name="swipe_threshold_title">Swipe sensitivity</string>
+    <string name="swipe_threshold_desc">Minimum swipe distance to trigger action (dp)</string>
+    <string name="swipe_preset_title">Preset configuration</string>
+    <string name="swipe_preset_edit">Text editing preset</string>
+    <string name="swipe_preset_quick">Quick actions preset</string>
+    <string name="swipe_preset_clear">Clear all presets</string>
+    <string name="swipe_export_title">Export config</string>
+    <string name="swipe_export_desc">Copy config to clipboard</string>
+    <string name="swipe_import_title">Import config</string>
+    <string name="swipe_import_desc">Import config from clipboard</string>
+    <string name="swipe_import_error_format">Invalid config format</string>
+    <string name="swipe_import_error_action">Unknown action ID: %1$s</string>
+    <string name="swipe_import_success">Config imported successfully</string>
+    <string name="swipe_export_success">Config copied to clipboard</string>
+    <string name="swipe_no_keys_configured">No keys configured</string>
 </resources>

@@ -25,8 +25,27 @@ object WeTypeSettings {
         "candidate_background_left_margin_dp"
     private const val KEY_CANDIDATE_PINYIN_LEFT_MARGIN_DP = "candidate_pinyin_left_margin_dp"
     private const val KEY_APPEARANCE_COLOR_PREFIX = "appearance_color_"
+    private const val KEY_COLOR_CUSTOMIZATION_ENABLED = "color_customization_enabled"
     private const val KEY_DISABLE_HOT_UPDATE = "disable_hot_update"
     private const val KEY_TOOLBAR_ICON_BG_OPACITY = "toolbar_icon_bg_opacity"
+    // ===== 下滑手势配置 =====
+    private const val KEY_SWIPE_ENABLED = "swipe_enabled"
+    private const val KEY_SWIPE_LIGHT_COLOR = "swipe_light_color"
+    private const val KEY_SWIPE_DARK_COLOR = "swipe_dark_color"
+    private const val KEY_SWIPE_TEXT_SIZE = "swipe_text_size"
+    private const val KEY_SWIPE_THRESHOLD = "swipe_threshold"
+    private const val KEY_SWIPE_KEY_MAP = "swipe_key_map"
+
+    const val DEFAULT_SWIPE_ENABLED = false
+    const val DEFAULT_SWIPE_LIGHT_COLOR = 0xCC333333.toInt()
+    const val DEFAULT_SWIPE_DARK_COLOR = 0xCCDDDDDD.toInt()
+    const val DEFAULT_SWIPE_TEXT_SIZE = 10
+    const val DEFAULT_SWIPE_THRESHOLD = 20
+    const val MIN_SWIPE_TEXT_SIZE = 6
+    const val MAX_SWIPE_TEXT_SIZE = 18
+    const val MIN_SWIPE_THRESHOLD = 8
+    const val MAX_SWIPE_THRESHOLD = 50
+
     const val DEFAULT_LIGHT_COLOR = 0xBDD4D4D4.toInt()
     const val DEFAULT_DARK_COLOR = 0x40000000
     const val DEFAULT_BLUR_RADIUS = 60
@@ -42,6 +61,7 @@ object WeTypeSettings {
     const val DEFAULT_CANDIDATE_BACKGROUND_LEFT_MARGIN_DP = 6
     const val DEFAULT_CANDIDATE_PINYIN_LEFT_MARGIN_DP = 16
     const val DEFAULT_TOOLBAR_ICON_BG_OPACITY = 150
+    const val DEFAULT_COLOR_CUSTOMIZATION_ENABLED = true
     const val DEFAULT_DISABLE_HOT_UPDATE = true
 
     private val legacyKeyColorDefaults = mapOf(
@@ -80,7 +100,15 @@ object WeTypeSettings {
         val candidatePinyinLeftMarginDp: Int,
         val appearanceColors: Map<String, Int>,
         val toolbarIconBgOpacity: Int,
-        val disableHotUpdate: Boolean
+        val colorCustomizationEnabled: Boolean,
+        val disableHotUpdate: Boolean,
+        // 下滑手势
+        val swipeEnabled: Boolean,
+        val swipeLightColor: Int,
+        val swipeDarkColor: Int,
+        val swipeTextSize: Int,
+        val swipeThreshold: Int,
+        val swipeKeyMap: String
     )
 
     fun getLightColor(context: Context): Int = readSnapshot(context).lightColor
@@ -110,6 +138,9 @@ object WeTypeSettings {
         readSnapshot(context).candidatePinyinLeftMarginDp
 
     fun getAppearanceColors(context: Context): Map<String, Int> = readSnapshot(context).appearanceColors
+
+    fun isColorCustomizationEnabled(context: Context): Boolean =
+        readSnapshot(context).colorCustomizationEnabled
 
     fun isDisableHotUpdate(context: Context): Boolean = readSnapshot(context).disableHotUpdate
 
@@ -149,7 +180,14 @@ object WeTypeSettings {
             candidatePinyinLeftMarginDp = snapshot.candidatePinyinLeftMarginDp,
             toolbarIconBgOpacity = snapshot.toolbarIconBgOpacity,
             appearanceColors = snapshot.appearanceColors,
-            disableHotUpdate = snapshot.disableHotUpdate
+            colorCustomizationEnabled = snapshot.colorCustomizationEnabled,
+            disableHotUpdate = snapshot.disableHotUpdate,
+            swipeEnabled = snapshot.swipeEnabled,
+            swipeLightColor = snapshot.swipeLightColor,
+            swipeDarkColor = snapshot.swipeDarkColor,
+            swipeTextSize = snapshot.swipeTextSize,
+            swipeThreshold = snapshot.swipeThreshold,
+            swipeKeyMap = snapshot.swipeKeyMap
         )
     }
 
@@ -168,7 +206,14 @@ object WeTypeSettings {
         candidatePinyinLeftMarginDp: Int,
         toolbarIconBgOpacity: Int,
         appearanceColors: Map<String, Int>,
-        disableHotUpdate: Boolean = DEFAULT_DISABLE_HOT_UPDATE
+        colorCustomizationEnabled: Boolean = DEFAULT_COLOR_CUSTOMIZATION_ENABLED,
+        disableHotUpdate: Boolean = DEFAULT_DISABLE_HOT_UPDATE,
+        swipeEnabled: Boolean = DEFAULT_SWIPE_ENABLED,
+        swipeLightColor: Int = DEFAULT_SWIPE_LIGHT_COLOR,
+        swipeDarkColor: Int = DEFAULT_SWIPE_DARK_COLOR,
+        swipeTextSize: Int = DEFAULT_SWIPE_TEXT_SIZE,
+        swipeThreshold: Int = DEFAULT_SWIPE_THRESHOLD,
+        swipeKeyMap: String = ""
     ) {
         val sanitizedAppearanceColors = WeTypeAppearanceColorGroups.groups.associate { group ->
             group.id to (appearanceColors[group.id] ?: group.defaultColor)
@@ -188,7 +233,14 @@ object WeTypeSettings {
             candidatePinyinLeftMarginDp = candidatePinyinLeftMarginDp,
             toolbarIconBgOpacity = toolbarIconBgOpacity,
             appearanceColors = sanitizedAppearanceColors,
-            disableHotUpdate = disableHotUpdate
+            colorCustomizationEnabled = colorCustomizationEnabled,
+            disableHotUpdate = disableHotUpdate,
+            swipeEnabled = swipeEnabled,
+            swipeLightColor = swipeLightColor,
+            swipeDarkColor = swipeDarkColor,
+            swipeTextSize = swipeTextSize,
+            swipeThreshold = swipeThreshold,
+            swipeKeyMap = swipeKeyMap
         )
     }
 
@@ -227,7 +279,23 @@ object WeTypeSettings {
     fun getCandidatePinyinLeftMarginDpXposed(): Int =
         readSnapshotXposed().candidatePinyinLeftMarginDp
 
+    fun isColorCustomizationEnabledXposed(): Boolean =
+        readSnapshotXposed().colorCustomizationEnabled
+
     fun isDisableHotUpdateXposed(): Boolean = readSnapshotXposed().disableHotUpdate
+
+    // ===== 下滑手势 Xposed Getter =====
+    fun isSwipeEnabledXposed(): Boolean = readSnapshotXposed().swipeEnabled
+
+    fun getSwipeLightColorXposed(): Int = readSnapshotXposed().swipeLightColor
+
+    fun getSwipeDarkColorXposed(): Int = readSnapshotXposed().swipeDarkColor
+
+    fun getSwipeTextSizeXposed(): Int = readSnapshotXposed().swipeTextSize
+
+    fun getSwipeThresholdXposed(): Int = readSnapshotXposed().swipeThreshold
+
+    fun getSwipeKeyMapXposed(): String = readSnapshotXposed().swipeKeyMap
 
     fun getAppearanceColorXposed(groupId: String): Int =
         readSnapshotXposed().appearanceColors[groupId]
@@ -287,7 +355,15 @@ object WeTypeSettings {
         candidatePinyinLeftMarginDp: Int,
         toolbarIconBgOpacity: Int,
         appearanceColors: Map<String, Int>,
-        disableHotUpdate: Boolean
+        colorCustomizationEnabled: Boolean,
+        disableHotUpdate: Boolean,
+        // 下滑手势
+        swipeEnabled: Boolean = DEFAULT_SWIPE_ENABLED,
+        swipeLightColor: Int = DEFAULT_SWIPE_LIGHT_COLOR,
+        swipeDarkColor: Int = DEFAULT_SWIPE_DARK_COLOR,
+        swipeTextSize: Int = DEFAULT_SWIPE_TEXT_SIZE,
+        swipeThreshold: Int = DEFAULT_SWIPE_THRESHOLD,
+        swipeKeyMap: String = ""
     ) {
         val editor = appPreferences(context)
             .edit()
@@ -315,7 +391,20 @@ object WeTypeSettings {
                 candidatePinyinLeftMarginDp.coerceIn(0, 64)
             )
             .putInt(KEY_TOOLBAR_ICON_BG_OPACITY, toolbarIconBgOpacity.coerceIn(0, 255))
+            .putBoolean(KEY_COLOR_CUSTOMIZATION_ENABLED, colorCustomizationEnabled)
             .putBoolean(KEY_DISABLE_HOT_UPDATE, disableHotUpdate)
+            .putBoolean(KEY_SWIPE_ENABLED, swipeEnabled)
+            .putInt(KEY_SWIPE_LIGHT_COLOR, swipeLightColor)
+            .putInt(KEY_SWIPE_DARK_COLOR, swipeDarkColor)
+            .putInt(
+                KEY_SWIPE_TEXT_SIZE,
+                swipeTextSize.coerceIn(MIN_SWIPE_TEXT_SIZE, MAX_SWIPE_TEXT_SIZE)
+            )
+            .putInt(
+                KEY_SWIPE_THRESHOLD,
+                swipeThreshold.coerceIn(MIN_SWIPE_THRESHOLD, MAX_SWIPE_THRESHOLD)
+            )
+            .putString(KEY_SWIPE_KEY_MAP, swipeKeyMap)
             .putBoolean(KEY_KEY_OPACITY_MIGRATED, true)
             .remove(KEY_KEY_OPACITY)
         WeTypeAppearanceColorGroups.groups.forEach { group ->
@@ -347,7 +436,14 @@ object WeTypeSettings {
             appearanceColors = WeTypeAppearanceColorGroups.groups.associate { group ->
                 group.id to (appearanceColors[group.id] ?: group.defaultColor)
             },
-            disableHotUpdate = disableHotUpdate
+            colorCustomizationEnabled = colorCustomizationEnabled,
+            disableHotUpdate = disableHotUpdate,
+            swipeEnabled = swipeEnabled,
+            swipeLightColor = swipeLightColor,
+            swipeDarkColor = swipeDarkColor,
+            swipeTextSize = swipeTextSize.coerceIn(MIN_SWIPE_TEXT_SIZE, MAX_SWIPE_TEXT_SIZE),
+            swipeThreshold = swipeThreshold.coerceIn(MIN_SWIPE_THRESHOLD, MAX_SWIPE_THRESHOLD),
+            swipeKeyMap = swipeKeyMap
         )
         synchronized(xposedPrefsLock) {
             xposedPrefsCache.values.forEach { prefs ->
@@ -430,7 +526,19 @@ object WeTypeSettings {
                 val color = getInt(key, fallbackColor)
                 group.id to migrateLegacyKeyOpacity(group, color, legacyKeyOpacity)
             },
-            disableHotUpdate = getBoolean(KEY_DISABLE_HOT_UPDATE, DEFAULT_DISABLE_HOT_UPDATE)
+            colorCustomizationEnabled = getBoolean(
+                KEY_COLOR_CUSTOMIZATION_ENABLED,
+                DEFAULT_COLOR_CUSTOMIZATION_ENABLED
+            ),
+            disableHotUpdate = getBoolean(KEY_DISABLE_HOT_UPDATE, DEFAULT_DISABLE_HOT_UPDATE),
+            swipeEnabled = getBoolean(KEY_SWIPE_ENABLED, DEFAULT_SWIPE_ENABLED),
+            swipeLightColor = getInt(KEY_SWIPE_LIGHT_COLOR, DEFAULT_SWIPE_LIGHT_COLOR),
+            swipeDarkColor = getInt(KEY_SWIPE_DARK_COLOR, DEFAULT_SWIPE_DARK_COLOR),
+            swipeTextSize = getInt(KEY_SWIPE_TEXT_SIZE, DEFAULT_SWIPE_TEXT_SIZE)
+                .coerceIn(MIN_SWIPE_TEXT_SIZE, MAX_SWIPE_TEXT_SIZE),
+            swipeThreshold = getInt(KEY_SWIPE_THRESHOLD, DEFAULT_SWIPE_THRESHOLD)
+                .coerceIn(MIN_SWIPE_THRESHOLD, MAX_SWIPE_THRESHOLD),
+            swipeKeyMap = getString(KEY_SWIPE_KEY_MAP, "") ?: ""
         )
     }
 
@@ -464,7 +572,14 @@ object WeTypeSettings {
         candidatePinyinLeftMarginDp = DEFAULT_CANDIDATE_PINYIN_LEFT_MARGIN_DP,
         toolbarIconBgOpacity = DEFAULT_TOOLBAR_ICON_BG_OPACITY,
         appearanceColors = WeTypeAppearanceColorGroups.defaultColors(),
-        disableHotUpdate = DEFAULT_DISABLE_HOT_UPDATE
+        colorCustomizationEnabled = DEFAULT_COLOR_CUSTOMIZATION_ENABLED,
+        disableHotUpdate = DEFAULT_DISABLE_HOT_UPDATE,
+        swipeEnabled = DEFAULT_SWIPE_ENABLED,
+        swipeLightColor = DEFAULT_SWIPE_LIGHT_COLOR,
+        swipeDarkColor = DEFAULT_SWIPE_DARK_COLOR,
+        swipeTextSize = DEFAULT_SWIPE_TEXT_SIZE,
+        swipeThreshold = DEFAULT_SWIPE_THRESHOLD,
+        swipeKeyMap = ""
     )
 
     private fun SharedPreferences.containsAnyPersistedSetting(): Boolean {
@@ -481,7 +596,14 @@ object WeTypeSettings {
             contains(KEY_CANDIDATE_BACKGROUND_LEFT_MARGIN_DP) ||
             contains(KEY_CANDIDATE_PINYIN_LEFT_MARGIN_DP) ||
             contains(KEY_TOOLBAR_ICON_BG_OPACITY) ||
-            contains(KEY_DISABLE_HOT_UPDATE)
+            contains(KEY_COLOR_CUSTOMIZATION_ENABLED) ||
+            contains(KEY_DISABLE_HOT_UPDATE) ||
+            contains(KEY_SWIPE_ENABLED) ||
+            contains(KEY_SWIPE_LIGHT_COLOR) ||
+            contains(KEY_SWIPE_DARK_COLOR) ||
+            contains(KEY_SWIPE_TEXT_SIZE) ||
+            contains(KEY_SWIPE_THRESHOLD) ||
+            contains(KEY_SWIPE_KEY_MAP)
         ) {
             return true
         }

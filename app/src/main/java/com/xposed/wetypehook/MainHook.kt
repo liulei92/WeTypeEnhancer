@@ -12,6 +12,7 @@ import android.view.inputmethod.InputMethodManager
 import com.xposed.wetypehook.wetype.hook.WeTypeResourceHooks
 import com.xposed.wetypehook.wetype.hook.WeTypeUpdateHooks
 import com.xposed.wetypehook.wetype.hook.WeTypeWindowHooks
+import com.xposed.wetypehook.wetype.hook.WeTypeSwipeGestureHooks
 import com.xposed.wetypehook.wetype.settings.WeTypeSettings
 import com.xposed.wetypehook.xposed.HookEnvironment
 import com.xposed.wetypehook.xposed.Log
@@ -146,6 +147,7 @@ class MainHook : IXposedHookLoadPackage, IXposedHookZygoteInit {
         hookWeTypeAboutLogoEntry()
         WeTypeResourceHooks.hookKeyboardLogo()
         WeTypeResourceHooks.hookToolbarIconBackground()
+        WeTypeSwipeGestureHooks.hookSwipeGesture()
     }
 
     private fun installBaseImeHooks(forceTransparentBottomView: Boolean) {

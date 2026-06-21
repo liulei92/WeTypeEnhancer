@@ -1,6 +1,8 @@
 package com.xposed.wetypehook
 
 import android.app.Activity
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -74,6 +76,8 @@ import com.kyant.capsule.ContinuousRoundedRectangle
 import com.xposed.wetypehook.wetype.graphics.WeTypeBloomStrokeDrawable
 import com.xposed.wetypehook.wetype.graphics.WeTypeCornerRadii
 import com.xposed.wetypehook.wetype.graphics.createWeTypeContinuousRoundedPath
+import com.xposed.wetypehook.wetype.hook.SwipeAction
+import com.xposed.wetypehook.wetype.hook.SwipePresets
 import com.xposed.wetypehook.wetype.settings.DARK_KEY_COLOR_GROUP_ID
 import com.xposed.wetypehook.wetype.settings.LIGHT_KEY_COLOR_GROUP_ID
 import com.xposed.wetypehook.wetype.settings.WeTypeAppearanceColorGroups
@@ -440,6 +444,16 @@ private fun WeTypeSettingsScreen(
     var disableHotUpdate by rememberSaveable {
         mutableStateOf(snapshot.disableHotUpdate)
     }
+    var colorCustomizationEnabled by rememberSaveable {
+        mutableStateOf(snapshot.colorCustomizationEnabled)
+    }
+    // 下滑手势状态
+    var swipeEnabled by rememberSaveable { mutableStateOf(snapshot.swipeEnabled) }
+    var swipeLightColor by rememberSaveable { mutableIntStateOf(snapshot.swipeLightColor) }
+    var swipeDarkColor by rememberSaveable { mutableIntStateOf(snapshot.swipeDarkColor) }
+    var swipeTextSize by rememberSaveable { mutableIntStateOf(snapshot.swipeTextSize) }
+    var swipeThreshold by rememberSaveable { mutableIntStateOf(snapshot.swipeThreshold) }
+    var swipeKeyMap by rememberSaveable { mutableStateOf(snapshot.swipeKeyMap) }
     val appearanceGroupColors = rememberSaveable(
         saver = listSaver(
             save = { it.toList() },
@@ -509,7 +523,14 @@ private fun WeTypeSettingsScreen(
                 ?: WeTypeSettings.DEFAULT_CANDIDATE_PINYIN_LEFT_MARGIN_DP,
             toolbarIconBgOpacity = toolbarIconBgOpacity,
             appearanceColors = currentAppearanceColors(),
-            disableHotUpdate = disableHotUpdate
+            colorCustomizationEnabled = colorCustomizationEnabled,
+            disableHotUpdate = disableHotUpdate,
+            swipeEnabled = swipeEnabled,
+            swipeLightColor = swipeLightColor,
+            swipeDarkColor = swipeDarkColor,
+            swipeTextSize = swipeTextSize,
+            swipeThreshold = swipeThreshold,
+            swipeKeyMap = swipeKeyMap
         )
         if (showSavedToast) {
             Toast.makeText(context, R.string.settings_saved, Toast.LENGTH_SHORT).show()
@@ -530,7 +551,14 @@ private fun WeTypeSettingsScreen(
             WeTypeSettings.DEFAULT_CANDIDATE_BACKGROUND_LEFT_MARGIN_DP.toString()
         candidatePinyinLeftMarginDp = WeTypeSettings.DEFAULT_CANDIDATE_PINYIN_LEFT_MARGIN_DP.toString()
         toolbarIconBgOpacity = WeTypeSettings.DEFAULT_TOOLBAR_ICON_BG_OPACITY
+        colorCustomizationEnabled = WeTypeSettings.DEFAULT_COLOR_CUSTOMIZATION_ENABLED
         disableHotUpdate = WeTypeSettings.DEFAULT_DISABLE_HOT_UPDATE
+        swipeEnabled = WeTypeSettings.DEFAULT_SWIPE_ENABLED
+        swipeLightColor = WeTypeSettings.DEFAULT_SWIPE_LIGHT_COLOR
+        swipeDarkColor = WeTypeSettings.DEFAULT_SWIPE_DARK_COLOR
+        swipeTextSize = WeTypeSettings.DEFAULT_SWIPE_TEXT_SIZE
+        swipeThreshold = WeTypeSettings.DEFAULT_SWIPE_THRESHOLD
+        swipeKeyMap = ""
         appearanceGroups.forEachIndexed { index, group ->
             appearanceGroupColors[index] = group.defaultColor
         }
@@ -847,11 +875,146 @@ private fun WeTypeSettingsScreen(
                 ) {
                     Column {
                         MiuixSwitchWidget(
+                            title = stringResource(R.string.settings_color_customization_title),
+                            description = stringResource(R.string.settings_color_customization_desc),
+                            checked = colorCustomizationEnabled,
+                            onCheckedChange = { colorCustomizationEnabled = it }
+                        )
+
+                        HorizontalDivider()
+
+                        MiuixSwitchWidget(
                             title = stringResource(R.string.settings_disable_hot_update_title),
                             description = stringResource(R.string.settings_disable_hot_update_desc),
                             checked = disableHotUpdate,
                             onCheckedChange = { disableHotUpdate = it }
                         )
+                    }
+                }
+            }
+
+            // 下滑手势分组
+            item {
+                SmallTitle(
+                    text = stringResource(R.string.swipe_group_title)
+                )
+                Card(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    insideMargin = PaddingValues(0.dp)
+                ) {
+                    Column {
+                        MiuixSwitchWidget(
+                            title = stringResource(R.string.swipe_enabled_title),
+                            description = stringResource(R.string.swipe_enabled_desc),
+                            checked = swipeEnabled,
+                            onCheckedChange = { swipeEnabled = it }
+                        )
+
+                        if (swipeEnabled) {
+                            HorizontalDivider()
+
+                            // 标签颜色（浅色）
+                            SwipeColorInput(
+                                title = stringResource(R.string.swipe_light_color_title),
+                                summary = stringResource(R.string.swipe_light_color_desc),
+                                color = swipeLightColor,
+                                onColorChange = { swipeLightColor = it }
+                            )
+
+                            HorizontalDivider()
+
+                            // 标签颜色（深色）
+                            SwipeColorInput(
+                                title = stringResource(R.string.swipe_dark_color_title),
+                                summary = stringResource(R.string.swipe_dark_color_desc),
+                                color = swipeDarkColor,
+                                onColorChange = { swipeDarkColor = it }
+                            )
+
+                            HorizontalDivider()
+
+                            // 标签字号
+                            SliderPreferenceItem(
+                                title = stringResource(R.string.swipe_text_size_title),
+                                value = swipeTextSize,
+                                min = WeTypeSettings.MIN_SWIPE_TEXT_SIZE,
+                                max = WeTypeSettings.MAX_SWIPE_TEXT_SIZE,
+                                onValueChange = { swipeTextSize = it }
+                            )
+
+                            HorizontalDivider()
+
+                            // 下滑灵敏度
+                            SliderPreferenceItem(
+                                title = stringResource(R.string.swipe_threshold_title),
+                                value = swipeThreshold,
+                                min = WeTypeSettings.MIN_SWIPE_THRESHOLD,
+                                max = WeTypeSettings.MAX_SWIPE_THRESHOLD,
+                                onValueChange = { swipeThreshold = it }
+                            )
+
+                            HorizontalDivider()
+
+                            // 预设方案
+                            Text(
+                                text = stringResource(R.string.swipe_preset_title),
+                                style = MiuixTheme.textStyles.main,
+                                modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 16.dp, bottom = 4.dp)
+                            )
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                SmallPresetButton(
+                                    text = stringResource(R.string.swipe_preset_edit),
+                                    modifier = Modifier.weight(1f),
+                                    onClick = {
+                                        swipeKeyMap = SwipePresets.presetToJson(SwipePresets.EDIT)
+                                    }
+                                )
+                                SmallPresetButton(
+                                    text = stringResource(R.string.swipe_preset_quick),
+                                    modifier = Modifier.weight(1f),
+                                    onClick = {
+                                        swipeKeyMap = SwipePresets.presetToJson(SwipePresets.QUICK)
+                                    }
+                                )
+                                SmallPresetButton(
+                                    text = stringResource(R.string.swipe_preset_clear),
+                                    modifier = Modifier.weight(1f),
+                                    onClick = {
+                                        swipeKeyMap = ""
+                                    }
+                                )
+                            }
+
+                            HorizontalDivider()
+
+                            // 导出/导入
+                            BasicComponent(
+                                title = stringResource(R.string.swipe_export_title),
+                                summary = stringResource(R.string.swipe_export_desc),
+                                onClick = {
+                                    exportSwipeConfig(context, swipeKeyMap)
+                                }
+                            )
+
+                            HorizontalDivider()
+
+                            BasicComponent(
+                                title = stringResource(R.string.swipe_import_title),
+                                summary = stringResource(R.string.swipe_import_desc),
+                                onClick = {
+                                    val result = importSwipeConfig(context)
+                                    if (result != null) {
+                                        swipeKeyMap = result
+                                        Toast.makeText(context, R.string.swipe_import_success, Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -1341,6 +1504,7 @@ private fun NumericTextSettingItem(
 private fun SliderPreferenceItem(
     title: String,
     value: Int,
+    min: Int = 0,
     max: Int,
     onValueChange: (Int) -> Unit
 ) {
@@ -1368,7 +1532,7 @@ private fun SliderPreferenceItem(
         Slider(
             value = value.toFloat(),
             onValueChange = { onValueChange(it.roundToInt()) },
-            valueRange = 0f..max.toFloat(),
+            valueRange = min.toFloat()..max.toFloat(),
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -1396,6 +1560,131 @@ private fun MiuixSwitchWidget(
             )
         }
     )
+}
+
+// ===== 下滑手势辅助组件 =====
+
+/** 小型预设按钮 */
+@Composable
+private fun SmallPresetButton(
+    text: String,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    BasicComponent(
+        title = text,
+        modifier = modifier,
+        onClick = onClick
+    )
+}
+
+/** 下滑标签颜色输入 */
+@Composable
+private fun SwipeColorInput(
+    title: String,
+    summary: String,
+    color: Int,
+    onColorChange: (Int) -> Unit
+) {
+    var input by rememberSaveable(title) { mutableStateOf(formatArgb(color)) }
+
+    LaunchedEffect(color) {
+        val formatted = formatArgb(color)
+        if (!input.equals(formatted, ignoreCase = true) && parseHexColor(input) != color) {
+            input = formatted
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .width(24.dp)
+                    .height(24.dp)
+                    .clip(ContinuousRoundedRectangle(4.dp))
+                    .background(ComposeColor(color))
+                    .border(1.dp, MiuixTheme.colorScheme.outline, ContinuousRoundedRectangle(4.dp))
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = title,
+                    style = MiuixTheme.textStyles.main
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = summary,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    style = MiuixTheme.textStyles.body2
+                )
+            }
+        }
+        Spacer(modifier = Modifier.height(12.dp))
+        TextField(
+            value = input,
+            onValueChange = { raw ->
+                val sanitized = sanitizeHexColorInput(raw) ?: return@TextField
+                input = sanitized
+                parseHexColor(sanitized)?.let(onColorChange)
+            },
+            label = "#AARRGGBB",
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+/** 导出下滑配置到剪贴板 */
+private fun exportSwipeConfig(context: Context, json: String) {
+    if (json.isBlank()) {
+        Toast.makeText(context, R.string.swipe_no_keys_configured, Toast.LENGTH_SHORT).show()
+        return
+    }
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    clipboard.setPrimaryClip(ClipData.newPlainText("swipe_config", json))
+    Toast.makeText(context, R.string.swipe_export_success, Toast.LENGTH_SHORT).show()
+}
+
+/** 从剪贴板导入下滑配置，校验后返回 JSON 字符串，格式无效则返回 null */
+private fun importSwipeConfig(context: Context): String? {
+    val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+    val clip = clipboard.primaryClip ?: run {
+        Toast.makeText(context, R.string.swipe_import_error_format, Toast.LENGTH_SHORT).show()
+        return null
+    }
+    val input = (clip.getItemAt(0)?.text?.toString() ?: "").trim()
+    if (input.isBlank()) {
+        Toast.makeText(context, R.string.swipe_import_error_format, Toast.LENGTH_SHORT).show()
+        return null
+    }
+    // 校验 JSON 格式
+    val obj = try {
+        org.json.JSONObject(input)
+    } catch (_: Exception) {
+        Toast.makeText(context, R.string.swipe_import_error_format, Toast.LENGTH_SHORT).show()
+        return null
+    }
+    // 校验每个 action ID 是否合法
+    val validIds = SwipeAction.entries.map { it.id }.toSet()
+    for (key in obj.keys()) {
+        val actionId = obj.optString(key, "")
+        if (actionId !in validIds) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.swipe_import_error_action, actionId),
+                Toast.LENGTH_SHORT
+            ).show()
+            return null
+        }
+    }
+    return input
 }
 
 private fun previewTextColor(color: Int): ComposeColor =

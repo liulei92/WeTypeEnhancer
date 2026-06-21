@@ -465,6 +465,7 @@ internal object WeTypeResourceHooks {
                 if (param.result != true) return@hookAfter
                 val attrResId = param.args[0] as? Int ?: return@hookAfter
                 val role = keyAttrRoles[attrResId] ?: return@hookAfter
+                if (!WeTypeSettings.isColorCustomizationEnabledXposed()) return@hookAfter
                 val outValue = param.args[1] as? TypedValue ?: return@hookAfter
                 val theme = param.thisObject as? Resources.Theme ?: return@hookAfter
                 val replacement = when (role) {
@@ -540,7 +541,9 @@ internal object WeTypeResourceHooks {
                     parameterTypes[0] == Int::class.javaPrimitiveType &&
                     returnType == Int::class.javaPrimitiveType
             }.hookAfter { param ->
-                param.result = WeTypeSettings.getAppearanceColorXposed("theme_color")
+                if (WeTypeSettings.isColorCustomizationEnabledXposed()) {
+                    param.result = WeTypeSettings.getAppearanceColorXposed("theme_color")
+                }
             }
             Log.i("Success: Hook candidate special text color")
         }.onFailure {
@@ -1085,6 +1088,7 @@ internal object WeTypeResourceHooks {
     }
 
     private fun resolvedGroupColor(group: WeTypeAppearanceColorGroup, sourceColor: Int): Int {
+        if (!WeTypeSettings.isColorCustomizationEnabledXposed()) return sourceColor
         val params = appearanceColorParams(group)
         return when (params.mode) {
             WeTypeAppearanceColorMode.Direct -> params.userColor

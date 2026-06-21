@@ -51,6 +51,9 @@
     <string name="settings_disable_hot_update_title">禁用热更新</string>
     <string name="settings_disable_hot_update_desc">阻止微信输入法热修复</string>
 
+    <string name="settings_color_customization_title">启用自定义颜色</string>
+    <string name="settings_color_customization_desc">关闭后颜色恢复微信输入法默认，其他效果（模糊、圆角、边缘高光）保持生效。</string>
+
     <string name="settings_preview_title">效果预览</string>
     <string name="settings_preview_mode_light">浅色模式</string>
     <string name="settings_preview_mode_dark">深色模式</string>
@@ -97,4 +100,30 @@
     <string name="activation_active_title">模块已启用</string>
     <string name="activation_active_summary">点击下方按钮进入寄生的 WeType 设置页</string>
     <string name="activation_open_embedded_settings">进入寄生的 WeType 设置页</string>
+
+    <!-- 下滑手势 -->
+    <string name="swipe_group_title">下滑手势</string>
+    <string name="swipe_enabled_title">启用下滑手势</string>
+    <string name="swipe_enabled_desc">在按键上向下滑动触发自定义操作</string>
+    <string name="swipe_light_color_title">标签颜色（浅色）</string>
+    <string name="swipe_light_color_desc">浅色模式下按键标签的文字颜色</string>
+    <string name="swipe_dark_color_title">标签颜色（深色）</string>
+    <string name="swipe_dark_color_desc">深色模式下按键标签的文字颜色</string>
+    <string name="swipe_text_size_title">标签字号</string>
+    <string name="swipe_text_size_desc">按键标签文字大小</string>
+    <string name="swipe_threshold_title">下滑灵敏度</string>
+    <string name="swipe_threshold_desc">触发动作的最小下滑距离（dp）</string>
+    <string name="swipe_preset_title">预设方案</string>
+    <string name="swipe_preset_edit">文本编辑预设</string>
+    <string name="swipe_preset_quick">快捷操作预设</string>
+    <string name="swipe_preset_clear">清空所有预设</string>
+    <string name="swipe_export_title">导出配置</string>
+    <string name="swipe_export_desc">将配置复制到剪贴板</string>
+    <string name="swipe_import_title">导入配置</string>
+    <string name="swipe_import_desc">从剪贴板导入配置</string>
+    <string name="swipe_import_error_format">配置格式无效</string>
+    <string name="swipe_import_error_action">未知的动作 ID：%1$s</string>
+    <string name="swipe_import_success">配置导入成功</string>
+    <string name="swipe_export_success">配置已复制到剪贴板</string>
+    <string name="swipe_no_keys_configured">暂无按键配置</string>
 </resources>
