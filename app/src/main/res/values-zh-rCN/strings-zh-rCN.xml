@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WeType 美化</string>
+    <string name="xposeddescription">解锁 MIUI 全面屏键盘限制，并自定义微信输入法窗口外观。</string>
+
+    <string name="settings_title">WeType 美化</string>
+    <string name="settings_summary">输入法窗口</string>
+    <string name="settings_corner_label">圆角</string>
+    <string name="settings_light_mode">浅色</string>
+    <string name="settings_dark_mode">深色</string>
+    <string name="settings_color_label">背景颜色</string>
+    <string name="settings_alpha_label">透明度</string>
+    <string name="settings_blur_label">模糊强度</string>
+    <string name="settings_preview_label">预览</string>
+    <string name="settings_save">保存更改</string>
+    <string name="settings_reset">恢复默认</string>
+    <string name="settings_restart">重启 WeType</string>
+    <string name="settings_saved">设置已保存, 重启输入法进程以生效</string>
+    <string name="settings_invalid_color">颜色格式不正确，请使用 #RRGGBB。</string>
+    <string name="settings_root_required">请先授予 root 权限</string>
+    <string name="settings_restart_done">WeType 已重启</string>
+    <string name="settings_restart_failed">重启 WeType 失败</string>
+
+    <string name="settings_section_preview">预览</string>
+    <string name="settings_section_mode">颜色模式</string>
+    <string name="settings_section_color">颜色与透明度</string>
+    <string name="settings_section_effect">模糊与圆角</string>
+    <string name="settings_section_actions">操作</string>
+
+    <string name="settings_alpha_hint">0-255 opacity</string>
+    <string name="settings_color_helper">支持 #RRGGBB，透明度请用上方滑块调整。</string>
+    <string name="settings_preview_hint">实时查看当前背景效果。</string>
+    <string name="settings_alpha_summary">当前透明度 %1$d / 255</string>
+    <string name="settings_blur_summary">当前模糊强度 %1$d / 100</string>
+    <string name="settings_corner_summary">当前圆角大小 %1$d / 100</string>
+    <string name="settings_save_summary">立即写入模块配置</string>
+    <string name="settings_reset_summary">恢复默认颜色、模糊和圆角</string>
+    <string name="settings_restart_summary">保存后重启输入法进程以生效</string>
+    <string name="settings_mode_summary_light">当前编辑浅色模式效果</string>
+    <string name="settings_mode_summary_dark">当前编辑深色模式效果</string>
+    <string name="settings_preview_summary">实时查看当前颜色、透明度与圆角效果</string>
+
+    <string name="settings_group_appearance">外观</string>
+    <string name="settings_edge_highlight_title">开启边缘高光效果</string>
+    <string name="settings_edge_highlight_desc">关闭后仅保留背景模糊与底色，不再绘制边缘高光。</string>
+    <string name="settings_edge_highlight_intensity_title">高光效果强度</string>
+    <string name="settings_group_color">颜色</string>
+    <string name="settings_group_actions">操作</string>
+    <string name="settings_group_other">其他</string>
+
+    <string name="settings_disable_hot_update_title">禁用热更新</string>
+    <string name="settings_disable_hot_update_desc">阻止微信输入法热修复</string>
+
+    <string name="settings_preview_title">效果预览</string>
+    <string name="settings_preview_mode_light">浅色模式</string>
+    <string name="settings_preview_mode_dark">深色模式</string>
+    <string name="settings_blur_title">模糊强度</string>
+    <string name="settings_corner_title">圆角大小</string>
+    <string name="settings_key_corner_title">键盘按键圆角</string>
+    <string name="settings_alpha_title">背景不透明度</string>
+    <string name="settings_key_opacity_title">按键不透明度</string>
+    <string name="settings_toolbar_icon_bg_opacity_title">工具栏图标背景不透明度</string>
+    <string name="settings_key_color_hook_alpha_title">候选词背景不透明度</string>
+    <string name="settings_custom_color">自定义背景颜色</string>
+    <string name="settings_appearance_color_group_summary">%1$d 个映射项 · 默认 %2$s</string>
+    <string name="settings_appearance_color_input_label">分组颜色</string>
+    <string name="settings_light_key_color_title">浅色模式按键色</string>
+    <string name="settings_dark_key_color_title">深色模式按键色</string>
+    <string name="settings_key_color_group_summary">透明度请用下方滑块调整 · 当前 %1$d / 255 · %2$d 个映射项</string>
+    <string name="settings_key_color_input_label">按键颜色</string>
+    <string name="settings_candidate_corner_title">候选词背景圆角</string>
+    <string name="settings_candidate_corner_desc">编辑首个候选词背景圆角</string>
+    <string name="settings_candidate_background_left_margin_title">首个候选词左边距</string>
+    <string name="settings_candidate_background_left_margin_desc">编辑首个候选词背景的左侧外边距</string>
+    <string name="settings_candidate_pinyin_margin_title">候选栏拼音左边距</string>
+    <string name="settings_candidate_pinyin_margin_desc">编辑候选栏内显拼音的左边距</string>
+
+    <string name="settings_save_title">保存设置</string>
+    <string name="settings_save_desc">将当前配置写入模块</string>
+    <string name="settings_reset_title">恢复默认</string>
+    <string name="settings_reset_desc">重置所有选项为默认值</string>
+    <string name="settings_restart_title">重启 WeType</string>
+    <string name="settings_restart_desc">重启输入法以应用更改</string>
+    <string name="settings_visit_github_title">前往 GitHub</string>
+    <string name="settings_module_active_tag">已启用</string>
+    <string name="settings_module_inactive_tag">未启用</string>
+
+    <string name="settings_color_dialog_title">选择颜色</string>
+    <string name="settings_cancel">取消</string>
+    <string name="settings_confirm">确定</string>
+    <string name="settings_reset_toast">已恢复默认, 重启输入法进程以生效</string>
+    <string name="activation_required_title">模块未启用/作用域未重启</string>
+    <string name="activation_required_summary">请保证已在 LSPosed 中启用该模块，重启作用域，已在 WeType 中看到美化效果。然后重新打开此桌面入口，即可进入寄生的 WeType 设置页。</string>
+    <string name="activation_detecting_summary">正在等待 WeType 启动以验证启用状态。</string>
+    <string name="activation_probe_summary">请参考上方提示进行操作。</string>
+    <string name="activation_probe_label">点击拉起 WeType</string>
+    <string name="activation_active_title">模块已启用</string>
+    <string name="activation_active_summary">点击下方按钮进入寄生的 WeType 设置页</string>
+    <string name="activation_open_embedded_settings">进入寄生的 WeType 设置页</string>
+</resources>
