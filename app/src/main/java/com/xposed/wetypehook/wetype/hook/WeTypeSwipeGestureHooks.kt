@@ -279,7 +279,7 @@ internal object WeTypeSwipeGestureHooks {
             }.hookAfter { param ->
                 val ims = param.thisObject as? InputMethodService ?: return@hookAfter
                 currentIMS = ims
-                trackedKeyboardView = ims.currentInputView
+                trackedKeyboardView = ims.invokeMethodAs<View>("getCurrentInputView")
                 Log.i("Swipe gesture: tracked keyboard view registered")
             }
 
