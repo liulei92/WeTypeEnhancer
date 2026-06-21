@@ -274,18 +274,18 @@ internal object WeTypeSwipeGestureHooks {
             // onStartInputView：获取键盘容器 View 并注册
             imsClass.findMethod {
                 name == "onStartInputView" && parameterTypes.sameAs(
-                    EditorInfo::class.java, Boolean::class.javaPrimitiveType
+                    EditorInfo::class.java, java.lang.Boolean.TYPE
                 )
             }.hookAfter { param ->
                 val ims = param.thisObject as? InputMethodService ?: return@hookAfter
                 currentIMS = ims
-                trackedKeyboardView = ims.getInputView()
+                trackedKeyboardView = ims.currentInputView
                 Log.i("Swipe gesture: tracked keyboard view registered")
             }
 
             // onFinishInputView：清理
             imsClass.findMethod {
-                name == "onFinishInputView" && parameterTypes.sameAs(Boolean::class.javaPrimitiveType)
+                name == "onFinishInputView" && parameterTypes.sameAs(java.lang.Boolean.TYPE)
             }.hookAfter {
                 currentIMS = null
                 trackedKeyboardView = null
