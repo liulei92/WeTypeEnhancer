@@ -192,7 +192,7 @@ internal object WeTypeSwipeGestureHooks {
             val dispatchDrawMethod = clazz.findMethodInHierarchy {
                 name == "dispatchDraw" && parameterTypes.sameAs(Canvas::class.java)
             }
-            dispatchDrawMethod.hookAfter { param ->
+            dispatchDrawMethod.hookAfter { param -&gt;
                 if (!WeTypeSettings.isSwipeEnabledXposed()) return@hookAfter
                 val view = param.thisObject as? View ?: return@hookAfter
                 if (view !== trackedKeyboardView) return@hookAfter
@@ -215,7 +215,7 @@ internal object WeTypeSwipeGestureHooks {
             val dispatchTouchEventMethod = clazz.findMethodInHierarchy {
                 name == "dispatchTouchEvent" && parameterTypes.sameAs(MotionEvent::class.java)
             }
-            dispatchTouchEventMethod.hookBefore { param ->
+            dispatchTouchEventMethod.hookBefore { param -&gt;
                 if (!WeTypeSettings.isSwipeEnabledXposed()) return@hookBefore
                 val view = param.thisObject as? View ?: return@hookBefore
                 if (view !== trackedKeyboardView) return@hookBefore
@@ -564,7 +564,7 @@ internal object WeTypeSwipeGestureHooks {
                 imm?.hideSoftInputFromWindow(token, 0)
                 Log.i("Success: Hide keyboard via swipe")
             } else {
-                Log.w("Failed: Cannot get window token for hiding keyboard")
+                Log.i("Failed: Cannot get window token for hiding keyboard")
             }
         } catch (e: Exception) {
             Log.e("Failed: Hide keyboard via swipe (API compatibility issue)")
@@ -589,7 +589,7 @@ internal object WeTypeSwipeGestureHooks {
                 imm?.switchToNextInputMethod(token, false)
                 Log.i("Success: Switch IME via swipe")
             } else {
-                Log.w("Failed: Cannot get window token for switching IME")
+                Log.i("Failed: Cannot get window token for switching IME")
             }
         } catch (e: Exception) {
             Log.e("Failed: Switch IME via swipe (API compatibility issue)")

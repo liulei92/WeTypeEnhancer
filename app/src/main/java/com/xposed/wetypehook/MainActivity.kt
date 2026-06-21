@@ -1030,7 +1030,7 @@ private fun WeTypeSettingsScreen(
                                 isDark = isSystemInDarkTheme(),
                                 lightColor = swipeLightColor,
                                 darkColor = swipeDarkColor,
-                                textSize = swipeTextSize
+                                swipeTextSize = swipeTextSize
                             )
                         }
                     }
